@@ -2,3 +2,5 @@ dist/
 .vendor/
 **/target/
 **/*.rs.bk
+node_modules
+.cache

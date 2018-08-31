@@ -12,17 +12,18 @@ include .vendor/make/prelude.mk
 include .vendor/make/help.mk
 include .vendor/make/lambda_rust.mk
 include .vendor/make/terraform.mk
+include .vendor/make/website.mk
 endif
 
 .PHONY : all check deploy clean
 
 ##all          - Build everything
-all: lambda_rust__build terraform__build
+all: lambda_rust__build terraform__build website__build
 	#We need to include this library with our lambda so diesel works
 	@zip -9 -j dist/lambdas/$(PROJECT_NAME).zip src/libpq.so.5
 
 ##clean        - Clean up project
-clean: lambda_rust__clean terraform__clean
+clean: lambda_rust__clean terraform__clean website__clean
 
 ##check-deploy - Verify next deploy will succeed
 check-deploy: all terraform__plan
@@ -40,3 +41,4 @@ vendor:
 	@$(GIT) clone https://github.com/richardanaya/makefiles.git .vendor/make
 	@$(GIT) clone https://github.com/richardanaya/terraforms.git .vendor/terraform
 	@mkdir -p .vendor/cargo
+	@yarn
