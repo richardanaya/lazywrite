@@ -7,7 +7,7 @@ locals {
 terraform {
   backend "s3" {
     bucket = "richardanaya-remote-state"
-    key    = "${local.project_name}/terraform.tfstate"
+    key    = "lazywrite/terraform.tfstate"
     region = "us-east-1"
   }
 }
