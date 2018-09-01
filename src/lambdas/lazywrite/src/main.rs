@@ -24,14 +24,17 @@ mod routing;
 fn handle_request(e: ApiGatewayProxyRequest, _ctx: Context) -> Result<serde_json::Value, Error> {
     Ok(json!({
       "statusCode": 200,
-      "body": routing::handle(e.path)?
+      "headers" : {
+          "Content-Type" : "text/json"
+      },
+      "body": routing::handle(e.path)?.to_string()
     }))
 }
 
 fn start_local_server() {
     let api = path!("api")
         .map(||{
-             routing::handle("/blah".to_owned()).unwrap()
+             warp::reply::json(&routing::handle("/blah".to_owned()).unwrap())
         });
     let index = warp::index()
         .and(warp::fs::file("../../../dist/website/index.html"));

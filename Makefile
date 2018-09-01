@@ -30,7 +30,11 @@ clean          : lambda_rust__clean terraform__clean website__clean
 check-deploy   : all terraform__plan
 
 ##deploy       - Deploy infrastructure
-deploy         : all terraform__apply
+deploy         : all terraform__apply upload_web
+
+##upload-web   - upload website assets
+upload_web     :
+	aws s3 sync dist/website s3://lazywrite.com/
 
 ##destroy      - Destroy infrastructure
 destroy        : all terraform__destroy

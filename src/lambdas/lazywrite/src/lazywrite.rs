@@ -3,6 +3,7 @@ use diesel::pg::PgConnection;
 use diesel::sql_types::*;
 use diesel::RunQueryDsl;
 use failure::Error;
+use serde_json;
 
 #[derive(QueryableByName)]
 struct Movie {
@@ -15,15 +16,10 @@ pub struct Controller<'a> {
 }
 
 impl<'a> Controller<'a> {
-    pub fn get_movies(&self) -> Result<String, Error> {
+    pub fn get_movies(&self) -> Result<serde_json::Value, Error> {
         let movies = sql_query("select * from movies").load::<Movie>(self.connection)?;
-        Ok(format!(
-            "List of movies: {}",
-            movies  // Join the list of movie names with a ', '
-                .iter()
-                .map(|m| m.title.to_string())
-                .collect::<Vec<_>>()
-                .join(", ")
-        ))
+        Ok(json!({
+            "movies": movies.iter().map(|m| m.title.to_string()).collect::<Vec<_>>()
+        }))
     }
 }
