@@ -9,6 +9,7 @@ extern crate serde_json;
 extern crate diesel;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
 extern crate warp;
 
 use failure::Error;
@@ -28,8 +29,15 @@ fn handle_request(e: ApiGatewayProxyRequest, _ctx: Context) -> Result<serde_json
 }
 
 fn start_local_server() {
-    let hello = warp::any().map(|| routing::handle("/".to_owned()).unwrap());
-    warp::serve(hello).run(([0, 0, 0, 0], 3030));
+    let api = path!("api")
+        .map(||{
+             routing::handle("/blah".to_owned()).unwrap()
+        });
+    let index = warp::index()
+        .and(warp::fs::file("../../../dist/website/index.html"));
+    let static_files = warp::any()
+    .and(warp::fs::dir("../../../dist/website"));
+    warp::serve(api.or(index).or(static_files)).run(([0, 0, 0, 0], 3030));
 }
 
 /// Start listening for AWS Lambda requests for API Gateway.
