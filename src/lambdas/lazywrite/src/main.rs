@@ -9,50 +9,29 @@ extern crate serde_json;
 extern crate diesel;
 #[macro_use]
 extern crate lazy_static;
-#[macro_use]
 extern crate warp;
 
 use warp::Filter;
-use diesel::pg::PgConnection;
-use diesel::prelude::*;
-use diesel::sql_types::*;
 use failure::Error;
 use lambda::event::apigw::ApiGatewayProxyRequest;
 use lambda::Context;
 
 mod db;
+mod routing;
+mod lazywrite;
 
-#[derive(QueryableByName)]
-struct Movie {
-    #[sql_type = "Text"]
-    title: String,
-}
-
-/// Handle API Gateway request and return API Gateway response.
 fn handle_request(e: ApiGatewayProxyRequest, _ctx: Context) -> Result<serde_json::Value, Error> {
-    let connection = &db::CONNECTION.lock().unwrap() as &PgConnection;
-    let movies = diesel::sql_query("select * from movies").load::<Movie>(connection)?;
-
     Ok(json!({
       "statusCode": 200,
-      "body": format!(
-          "List of movies for url path {}: {}",
-          e.path, // The path of the current url (e.g. /index.html )
-          movies  // Join the list of movie names with a ', '
-              .iter()
-              .map(|m| m.title.to_string())
-              .collect::<Vec<_>>()
-              .join(", "))
-          }))
+      "body": routing::handle(e.path)?
+    }))
 }
 
 fn start_local_server(){
-    // GET /hello/warp => 200 OK with body "Hello, warp!"
-    let hello = path!("hello" / String)
-        .map(|name| {
-            format!("hey")
+    let hello = warp::any()
+        .map(|| {
+            routing::handle("/".to_owned()).unwrap()
         });
-
     warp::serve(hello)
         .run(([0, 0, 0, 0], 3030));
 }
