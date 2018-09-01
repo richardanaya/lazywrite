@@ -43,7 +43,11 @@ CONNECTION_STRING = ${shell echo $CONNECTION_STRING}
 
 ##run          -
 run            :
-	docker run --rm -p 3030:3030 -e "CONNECTION_STRING=${CONNECTION_STRING}" -v $(abspath .vendor/cargo):/home/.cargo -e CARGO_HOME='/home/.cargo' -v `pwd`:/code -w /code/src/lambdas/lazywrite $(RUST_I) run --release --features "local_development"
+	@docker run --rm -p 3030:3030 -e "CONNECTION_STRING=${CONNECTION_STRING}" -v $(abspath .vendor/cargo):/home/.cargo -e CARGO_HOME='/home/.cargo' -v `pwd`:/code -w /code/src/lambdas/lazywrite $(RUST_I) run --release --features "local_development"
+
+##lint         -
+lint           :
+	@cd src/lambdas/lazywrite && cargo fmt
 
 ##vendor       - Vendor makefiles
 vendor         :
