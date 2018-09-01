@@ -3,8 +3,8 @@ use diesel::prelude::*;
 use failure::Error;
 use rusoto_core::Region;
 use rusoto_secretsmanager::{GetSecretValueRequest, SecretsManager, SecretsManagerClient};
-use std::sync::Mutex;
 use std::env;
+use std::sync::Mutex;
 
 /// Global database connection.
 lazy_static! {
@@ -16,8 +16,10 @@ lazy_static! {
 
 /// Retrieve connection string from AWS Secrets and connect to PostgreSQL.
 pub fn establish_connection() -> Result<PgConnection, Error> {
-    let connection_string = match cfg!(feature="local_development") {
-        true => env::var("CONNECTION_STRING").expect("Connection string not found in envrionmental variable CONNECTION_STRING.").to_owned(),
+    let connection_string = match cfg!(feature = "local_development") {
+        true => env::var("CONNECTION_STRING")
+            .expect("Connection string not found in envrionmental variable CONNECTION_STRING.")
+            .to_owned(),
         _ => {
             let secretclient = SecretsManagerClient::new(Region::UsEast1);
             let mut secret_request = GetSecretValueRequest::default();

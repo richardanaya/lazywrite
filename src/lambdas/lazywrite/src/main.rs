@@ -11,14 +11,14 @@ extern crate diesel;
 extern crate lazy_static;
 extern crate warp;
 
-use warp::Filter;
 use failure::Error;
 use lambda::event::apigw::ApiGatewayProxyRequest;
 use lambda::Context;
+use warp::Filter;
 
 mod db;
-mod routing;
 mod lazywrite;
+mod routing;
 
 fn handle_request(e: ApiGatewayProxyRequest, _ctx: Context) -> Result<serde_json::Value, Error> {
     Ok(json!({
@@ -27,18 +27,14 @@ fn handle_request(e: ApiGatewayProxyRequest, _ctx: Context) -> Result<serde_json
     }))
 }
 
-fn start_local_server(){
-    let hello = warp::any()
-        .map(|| {
-            routing::handle("/".to_owned()).unwrap()
-        });
-    warp::serve(hello)
-        .run(([0, 0, 0, 0], 3030));
+fn start_local_server() {
+    let hello = warp::any().map(|| routing::handle("/".to_owned()).unwrap());
+    warp::serve(hello).run(([0, 0, 0, 0], 3030));
 }
 
 /// Start listening for AWS Lambda requests for API Gateway.
 fn main() {
-    if cfg!(feature="local_development") {
+    if cfg!(feature = "local_development") {
         start_local_server();
     } else {
         lambda::start(move |e: ApiGatewayProxyRequest| {
