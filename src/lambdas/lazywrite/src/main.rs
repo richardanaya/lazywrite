@@ -9,7 +9,10 @@ extern crate serde_json;
 extern crate diesel;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate warp;
 
+use warp::Filter;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::sql_types::*;
@@ -43,10 +46,25 @@ fn handle_request(e: ApiGatewayProxyRequest, _ctx: Context) -> Result<serde_json
           }))
 }
 
+fn start_local_server(){
+    // GET /hello/warp => 200 OK with body "Hello, warp!"
+    let hello = path!("hello" / String)
+        .map(|name| {
+            format!("hey")
+        });
+
+    warp::serve(hello)
+        .run(([0, 0, 0, 0], 3030));
+}
+
 /// Start listening for AWS Lambda requests for API Gateway.
 fn main() {
-    lambda::start(move |e: ApiGatewayProxyRequest| {
-        let ctx = Context::current();
-        handle_request(e, ctx)
-    })
+    if cfg!(feature="local_development") {
+        start_local_server();
+    } else {
+        lambda::start(move |e: ApiGatewayProxyRequest| {
+            let ctx = Context::current();
+            handle_request(e, ctx)
+        });
+    }
 }
