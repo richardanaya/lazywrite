@@ -16,9 +16,10 @@ pub struct Controller<'a> {
 }
 
 impl<'a> Controller<'a> {
-    pub fn get_movies(&self) -> Result<serde_json::Value, Error> {
+    pub fn get_movies(&self, path: String) -> Result<serde_json::Value, Error> {
         let movies = sql_query("select * from movies").load::<Movie>(self.connection)?;
         Ok(json!({
+            "path":path,
             "movies": movies.iter().map(|m| m.title.to_string()).collect::<Vec<_>>()
         }))
     }

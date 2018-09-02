@@ -41,11 +41,15 @@ fn handle_request(e: ApiGatewayProxyRequest, _ctx: Context) -> Result<serde_json
 }
 
 fn start_local_server() {
-    let api = path!("api").map(|| warp::reply::json(&routing::handle("/blah".to_owned()).unwrap()));
+    let api = path!("api")
+        .and(warp::path::tail())
+        .map(|tail: warp::path::Tail| {
+            let path = format!("/{}", tail.as_str().to_owned());
+            warp::reply::json(&routing::handle(path).unwrap())
+        });
     let index = warp::index().and(warp::fs::file("../../../dist/website/index.html"));
     let static_files = warp::any().and(warp::fs::dir("../../../dist/website"));
-    let hello = path!("hello" / String).map(|name| format!("Hello, {}!", name));
-    warp::serve(hello.or(api).or(index).or(static_files)).run(([0, 0, 0, 0], 3030));
+    warp::serve(api.or(index).or(static_files)).run(([0, 0, 0, 0], 3030));
 }
 
 /// Start listening for AWS Lambda requests for API Gateway.
