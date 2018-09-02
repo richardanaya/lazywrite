@@ -1,4 +1,5 @@
 extern crate aws_lambda as lambda;
+extern crate http;
 extern crate rusoto_core;
 extern crate rusoto_secretsmanager;
 #[macro_use]
@@ -13,6 +14,7 @@ extern crate lazy_static;
 extern crate warp;
 
 use failure::Error;
+use http::Method;
 use lambda::event::apigw::ApiGatewayProxyRequest;
 use lambda::Context;
 use warp::Filter;
@@ -22,7 +24,8 @@ mod lazywrite;
 mod routing;
 
 fn handle_request(e: ApiGatewayProxyRequest, _ctx: Context) -> Result<serde_json::Value, Error> {
-    match routing::handle(e.path) {
+    let method = Method::from_bytes(e.http_method.as_bytes())?;
+    match routing::route(method, e.path) {
         Ok(json) => Ok(json!({
               "statusCode": 200,
               "headers" : {
@@ -42,10 +45,11 @@ fn handle_request(e: ApiGatewayProxyRequest, _ctx: Context) -> Result<serde_json
 
 fn start_local_server() {
     let api = path!("api")
+        .and(warp::method())
         .and(warp::path::tail())
-        .map(|tail: warp::path::Tail| {
+        .map(|method: Method, tail: warp::path::Tail| {
             let path = format!("/{}", tail.as_str().to_owned());
-            warp::reply::json(&routing::handle(path).unwrap())
+            warp::reply::json(&routing::route(method, path).unwrap())
         });
     let index = warp::index().and(warp::fs::file("../../../dist/website/index.html"));
     let static_files = warp::any().and(warp::fs::dir("../../../dist/website"));
