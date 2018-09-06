@@ -21,6 +21,8 @@ use warp::Filter;
 
 mod db;
 mod lazywrite;
+mod route;
+mod routes;
 mod routing;
 
 fn handle_request(e: ApiGatewayProxyRequest, _ctx: Context) -> Result<serde_json::Value, Error> {
